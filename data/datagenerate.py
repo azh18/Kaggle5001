@@ -6,7 +6,6 @@ import numpy as np
 import pandas as pd
 import time
 import random
-from matplotlib import pyplot as plt
 import itertools
 from copy import deepcopy
 from math import log2
@@ -133,8 +132,8 @@ def run_generate_big_train(filename):
     newdf = train_data.select_dtypes(include=numerics)
     for k in newdf:
         train_data[k].plot.hist(bins=10, rwidth=0.8)
-        plt.title("freq on %s" % k)
-        plt.show()
+        # plt.title("freq on %s" % k)
+        # plt.show()
     # 发现除了n_informative是正态分布，其他都是均匀分布
     # 有几个属性生成的时候使用全部的unique值，因为比较少
     # 假设n_informative没什么用，生成的时候不考虑，那么就其他的来说，直接最小值最大值之间生成就可以了
