@@ -130,8 +130,8 @@ def run_generate_big_train(filename):
     train_data = pd.read_csv(filename)
     numerics = ['int16', 'int32', 'int64', 'float16', 'float32', 'float64']
     newdf = train_data.select_dtypes(include=numerics)
-    for k in newdf:
-        train_data[k].plot.hist(bins=10, rwidth=0.8)
+    #for k in newdf:
+        # train_data[k].plot.hist(bins=10, rwidth=0.8)
         # plt.title("freq on %s" % k)
         # plt.show()
     # 发现除了n_informative是正态分布，其他都是均匀分布
@@ -173,54 +173,54 @@ def run_generate_big_train(filename):
     # print(new_data)
 
 
+
+def generate_random_sample():
+    maxIter = 10
+    for i in range(maxIter):
+        n_samples = samples.rvs()
+        n_features = random.randint(100, 1500)
+        n_penalty = random.randint(0, 3)
+        penalty = penalty_items[n_penalty]
+        l1_ratio = random.random()
+        n_alpha = random.randint(0, 2)
+        alpha = alpha_range[n_alpha]
+        max_iter = random.randint(100, 1000)
+        random_state = random.randint(0, 1000)
+        n_job = random.randint(0, len(jobs_range) - 1)
+        jobs = jobs_range[n_job]
+
+        n_classes = random.randint(2, 12)
+
+        n_clusters_per_class = random.randint(2, 6)
+        n_informative = random.randint(5, 12)
+        flip_y = random.random() / 10.0
+        scale = random.uniform(1, 100)
+
+        x, y = make_classification(n_samples=n_samples, n_features=n_features, n_informative=n_informative,
+                                   n_classes=n_classes,
+                                   n_clusters_per_class=n_clusters_per_class,
+                                   flip_y=flip_y, class_sep=1.0,
+                                   scale=scale)
+        model = SGDClassifier(
+            penalty=penalty, alpha=alpha, l1_ratio=l1_ratio,
+            max_iter=max_iter,
+            n_jobs=jobs,
+            random_state=random_state)
+        tick1 = time.time()
+        model.fit(x, y)
+        tick2 = time.time()
+        time_interval = tick2 - tick1
+
+        rows.append(
+            [penalty, l1_ratio, alpha, max_iter, random_state, jobs, n_samples, n_features, n_classes, n_clusters_per_class,
+             n_informative, flip_y, scale, time_interval])
+
+    for row in rows:
+        df.loc[len(df)] = row
+
+    df.to_csv('time.csv')
+
+
 if __name__ == "__main__":
     run_generate_big_train("train.csv")
     run_train_augment("new_middle_data.csv")
-
-
-
-#
-# maxIter = 10
-# for i in range(maxIter):
-#     n_samples = samples.rvs()
-#     n_features = random.randint(100, 1500)
-#     n_penalty = random.randint(0, 3)
-#     penalty = penalty_items[n_penalty]
-#     l1_ratio = random.random()
-#     n_alpha = random.randint(0, 2)
-#     alpha = alpha_range[n_alpha]
-#     max_iter = random.randint(100, 1000)
-#     random_state = random.randint(0, 1000)
-#     n_job = random.randint(0, len(jobs_range) - 1)
-#     jobs = jobs_range[n_job]
-#
-#     n_classes = random.randint(2, 12)
-#
-#     n_clusters_per_class = random.randint(2, 6)
-#     n_informative = random.randint(5, 12)
-#     flip_y = random.random() / 10.0
-#     scale = random.uniform(1, 100)
-#
-#     x, y = make_classification(n_samples=n_samples, n_features=n_features, n_informative=n_informative,
-#                                n_classes=n_classes,
-#                                n_clusters_per_class=n_clusters_per_class,
-#                                flip_y=flip_y, class_sep=1.0,
-#                                scale=scale)
-#     model = SGDClassifier(
-#         penalty=penalty, alpha=alpha, l1_ratio=l1_ratio,
-#         max_iter=max_iter,
-#         n_jobs=jobs,
-#         random_state=random_state)
-#     tick1 = time.time()
-#     model.fit(x, y)
-#     tick2 = time.time()
-#     time_interval = tick2 - tick1
-#
-#     rows.append(
-#         [penalty, l1_ratio, alpha, max_iter, random_state, jobs, n_samples, n_features, n_classes, n_clusters_per_class,
-#          n_informative, flip_y, scale, time_interval])
-
-for row in rows:
-    df.loc[len(df)] = row
-
-df.to_csv('time.csv')

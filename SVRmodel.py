@@ -7,7 +7,7 @@ from copy import deepcopy
 def process_data(dataset):
     dataset['alpha'] = dataset['alpha'].apply(lambda x: log10(x))
     dataset.drop(['id'], axis=1, inplace=True)
-    dataset.drop(['random_state', 'n_informative', 'n_clusters_per_class', 'flip_y', 'scale'], axis=1, inplace=True)
+    dataset.drop(['random_state', 'n_informative', 'n_clusters_per_class', 'flip_y', 'scale', 'l1_ratio'], axis=1, inplace=True)
 
     dataset['complex'] = dataset.apply(lambda r: r["max_iter"]*r["n_samples"]*r["n_features"], axis=1)
     # one-hot
@@ -19,7 +19,7 @@ def process_data(dataset):
     # dataset['penalty'] = df.codes
 
     max_jobs = 8
-    dataset['n_jobs'] = dataset['n_jobs'].apply(lambda x: max_jobs if x == -1 else x)
+    dataset['n_jobs'] = dataset['n_jobs'].apply(lambda x: max_jobs if x == -1 or x > max_jobs else x)
     # DO LOG
     for k in ['n_jobs', 'max_iter', 'n_samples', 'n_features', 'complex']:
         dataset[k] = dataset[k].apply(lambda x: log10(x))
@@ -124,10 +124,10 @@ if __name__ == "__main__":
 
     Y = np.array(np.ravel(Y))
     # print(X.shape, Y.shape, Y)
-    regressor = MLPRegressor(hidden_layer_sizes=(100, 50, 25), alpha=0.01, learning_rate='adaptive',
+    regressor = MLPRegressor(hidden_layer_sizes=(84, 42, 21), alpha=0.005, learning_rate='adaptive',
                              early_stopping=True, n_iter_no_change=50, max_iter=10000)
     # regressor = SVR(kernel='rbf', gamma='auto', C=100, epsilon=0.01, tol=1e-4)
-    regressor = AdaBoostRegressor(base_estimator=regressor, n_estimators=50, learning_rate=0.1, loss='linear')
+    regressor = AdaBoostRegressor(base_estimator=regressor, n_estimators=100, learning_rate=0.05, loss='exponential')
 
     # regressor = SVR(degree=8, C=1, epsilon=0.2)
     regressor.fit(X, Y)
