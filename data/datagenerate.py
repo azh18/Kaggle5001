@@ -1,3 +1,8 @@
+# encoding:utf-8
+# 生成策略：在正常随机采样生成的同时，增加几种采样：加大N_SAMPLE的下界,加大N_FEATURE的下界，加大MAX_ITER的下界
+# 这是为了生成更多运行时间长的训练数据，因为这些数据的准确度倾向于更影响整体的表现。
+##
+
 from sklearn.datasets import make_classification
 from sklearn.linear_model import SGDClassifier
 from scipy.stats import randint as sp_randint
@@ -21,7 +26,6 @@ penalty_items = ['none', 'l1', 'elasticnet', 'l2']
 alpha_range = [0.0001, 0.001, 0.01]
 jobs_range = [1, 2, 4]
 
-samples = sp_randint(100, 300)
 
 
 def generate_runtime_simple(n_samples, n_features, n_classes, n_clusters_per_class,
@@ -173,18 +177,31 @@ def run_generate_big_train(filename):
     # print(new_data)
 
 
-
-def generate_random_sample():
+def generate_random_sample(mode):
     maxIter = 10
     for i in range(maxIter):
+        print("mode:", mode, "iter:", i)
+        if mode == 1:
+            samples = sp_randint(700, 1500)
+        else:
+            samples = sp_randint(100, 1500)
         n_samples = samples.rvs()
-        n_features = random.randint(100, 1500)
+
+        if mode == 2:
+            n_features = random.randint(700, 1500)  # 100-1500
+        else:
+            n_features = random.randint(100, 1500)
+
         n_penalty = random.randint(0, 3)
         penalty = penalty_items[n_penalty]
         l1_ratio = random.random()
         n_alpha = random.randint(0, 2)
         alpha = alpha_range[n_alpha]
-        max_iter = random.randint(100, 1000)
+        if mode == 3:
+            max_iter = random.randint(700, 1000)  # 100-1000
+        else:
+            max_iter = random.randint(100, 1000)
+
         random_state = random.randint(0, 1000)
         n_job = random.randint(0, len(jobs_range) - 1)
         jobs = jobs_range[n_job]
@@ -195,6 +212,9 @@ def generate_random_sample():
         n_informative = random.randint(5, 12)
         flip_y = random.random() / 10.0
         scale = random.uniform(1, 100)
+
+        if n_classes * n_clusters_per_class > 2 ** n_informative:
+            continue
 
         x, y = make_classification(n_samples=n_samples, n_features=n_features, n_informative=n_informative,
                                    n_classes=n_classes,
@@ -218,9 +238,10 @@ def generate_random_sample():
     for row in rows:
         df.loc[len(df)] = row
 
-    df.to_csv('time.csv')
+    df.to_csv('time_mode%d.csv' % mode)
 
 
 if __name__ == "__main__":
-    run_generate_big_train("train.csv")
-    run_train_augment("new_middle_data.csv")
+    # run_generate_big_train("train.csv")
+    # run_train_augment("new_middle_data.csv")
+    generate_random_sample(0)
