@@ -234,7 +234,7 @@ def generate_random_sample(mode, iter_num):
             [penalty, l1_ratio, alpha, max_iter, random_state, jobs, n_samples, n_features, n_classes, n_clusters_per_class,
              n_informative, flip_y, scale, time_interval])
 
-        if i % 2 == 0:
+        if i % 100 == 0:
             for row in rows:
                 df.loc[len(df)] = row
             rows = []
