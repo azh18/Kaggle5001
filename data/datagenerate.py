@@ -17,11 +17,7 @@ from math import log2
 
 # features = sp_randint(10, 30)
 
-df = pd.DataFrame(columns=['penalty', 'l1_ratio', 'alpha', 'max_iter', 'random_state', 'n_jobs', 'n_samples',
-                           'n_features', 'n_classes', 'n_clusters_per_class', 'n_informative', 'flip_y', 'scale',
-                           'time'])
 
-rows = []
 penalty_items = ['none', 'l1', 'elasticnet', 'l2']
 alpha_range = [0.0001, 0.001, 0.01]
 jobs_range = [1, 2, 4]
@@ -177,8 +173,12 @@ def run_generate_big_train(filename):
     # print(new_data)
 
 
-def generate_random_sample(mode):
-    maxIter = 10
+def generate_random_sample(mode, iter_num):
+    maxIter = iter_num
+    rows = []
+    df = pd.DataFrame(columns=['penalty', 'l1_ratio', 'alpha', 'max_iter', 'random_state', 'n_jobs', 'n_samples',
+                               'n_features', 'n_classes', 'n_clusters_per_class', 'n_informative', 'flip_y', 'scale',
+                               'time'])
     for i in range(maxIter):
         print("mode:", mode, "iter:", i)
         if mode == 1:
@@ -230,18 +230,19 @@ def generate_random_sample(mode):
         model.fit(x, y)
         tick2 = time.time()
         time_interval = tick2 - tick1
-
         rows.append(
             [penalty, l1_ratio, alpha, max_iter, random_state, jobs, n_samples, n_features, n_classes, n_clusters_per_class,
              n_informative, flip_y, scale, time_interval])
 
-    for row in rows:
-        df.loc[len(df)] = row
-
-    df.to_csv('time_mode%d.csv' % mode)
+        if i % 2 == 0:
+            for row in rows:
+                df.loc[len(df)] = row
+            rows = []
+            df.to_csv('time_mode%d.csv' % mode)
+            print("wrote csv...")
 
 
 if __name__ == "__main__":
     # run_generate_big_train("train.csv")
     # run_train_augment("new_middle_data.csv")
-    generate_random_sample(0)
+    generate_random_sample(0, 5000)
