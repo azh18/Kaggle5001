@@ -4,6 +4,7 @@ import pandas as pd
 from copy import deepcopy
 
 
+# feature transformation/choose
 def process_data(dataset):
     dataset['alpha'] = dataset['alpha'].apply(lambda x: log10(x))
     dataset.drop(['id'], axis=1, inplace=True)
@@ -57,7 +58,6 @@ from sklearn import preprocessing
 from sklearn.model_selection import cross_val_score, KFold
 from sklearn.ensemble import AdaBoostRegressor
 
-from xgboost import XGBRegressor, DMatrix, cv
 import matplotlib.pyplot as plt
 
 
@@ -71,8 +71,8 @@ def get_scatter(data_features, label, penalty_type):
 
 
 if __name__ == "__main__":
-    data = pd.read_csv("./data/train.csv")
-    test_data = pd.read_csv("./data/test.csv")
+    data = pd.read_csv("./train.csv")
+    test_data = pd.read_csv("./test.csv")
 
     train_data = data.iloc[:, :-1]
     train_label = data.iloc[:, -1]
@@ -103,18 +103,13 @@ if __name__ == "__main__":
         plt.figure()
         plt.title(k)
         all_train_set[k].hist(bins=10)
-    # print(all_train_set.describe())
-    # corr between different attributes
+
     corr_matrix = all_train_set.corr()
     print(all_train_set.columns)
     print(corr_matrix)
     ax = plt.matshow(corr_matrix)
     plt.colorbar(ax)
     plt.show()
-    # print(all_train_set.columns)
-
-    # print(train_set.shape, train_label.shape, test_set.shape, test_label.shape)
-    # print(train_set, train_label)
 
     X = all_train_set.iloc[:, :-1]
     Y = all_train_set.iloc[:, -1]
@@ -124,7 +119,6 @@ if __name__ == "__main__":
     get_scatter(X, Y, penalty_type_array)
 
     Y = np.array(np.ravel(Y))
-    # print(X.shape, Y.shape, Y)
     regressor = MLPRegressor(hidden_layer_sizes=(84, 42, 21), alpha=0.005, learning_rate='adaptive',
                              early_stopping=True, n_iter_no_change=50, max_iter=10000)
     # regressor = SVR(kernel='rbf', gamma='auto', C=100, epsilon=0.01, tol=1e-4)
@@ -133,12 +127,9 @@ if __name__ == "__main__":
     # regressor = SVR(degree=8, C=1, epsilon=0.2)
     print("start training...")
     regressor.fit(X, Y)
-    # print("compute cross validation score")
-    # scores = cross_val_score(regressor, X, Y, cv=10, scoring='neg_mean_squared_error')
 
     train_predict_label = pd.DataFrame(regressor.predict(X))
     print("train MSE:", mean_squared_error(regressor.predict(X), Y))
-    # print("cv MSE:", scores, np.mean(scores))
 
     train_predict_label_real = train_predict_label.apply(lambda x: resume_from_log_label(x))
     print("real train MSE", mean_squared_error(train_predict_label_real, np.vectorize(resume_from_log_label)(Y)))
@@ -149,6 +140,7 @@ if __name__ == "__main__":
     regressor_cv = deepcopy(regressor)
     X = np.array(X)
     cnt = 0
+    # get a stable mse estimation
     for i in range(1, 2):
         for train_idx, test_idx in kf.split(X, y=Y):
             cnt += 1
@@ -164,12 +156,9 @@ if __name__ == "__main__":
     print("cv real err:", cv_err, "\n cv mean mse:", np.mean(np.array(cv_err)), "cv mse std:", np.std(np.array(cv_err)))
 
     predict_result = regressor.predict(test_data)
-    # predict_result[predict_result<0] = train_label.min()
-    # pd.DataFrame(predict_result, columns=['time']).to_csv("result.csv")
-    # print(predict_result)
 
     predict_result = pd.DataFrame(predict_result, columns=['time'])
     predict_result = predict_result.apply(lambda x: resume_from_log_label(x))
-    predict_result.to_csv("result_%2.2f+%2.2f.csv" % (np.mean(np.array(cv_err)), np.std(np.array(cv_err))))
+    # output result
+    predict_result.to_csv("result_%2.2f+%2.2f.csv" % (np.mean(np.array(cv_err)), np.std(np.array(cv_err))), index_label="Id")
     pd.concat([test_data, predict_result], axis=1).to_csv('result_full.csv')
-    # print(np.array(predict_result))
