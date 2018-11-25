@@ -95,28 +95,19 @@ if __name__ == "__main__":
     train_data.to_csv("train_processed_normal.csv")
     test_data.to_csv("test_processed_normal.csv")
 
-    train_label.apply(lambda x: to_log_label(x)).hist()
 
     # regressor
     all_train_set = pd.concat([train_data, train_label], axis=1, sort=False)
-    for k in all_train_set.columns:
-        plt.figure()
-        plt.title(k)
-        all_train_set[k].hist(bins=10)
 
     corr_matrix = all_train_set.corr()
     print(all_train_set.columns)
     print(corr_matrix)
-    ax = plt.matshow(corr_matrix)
-    plt.colorbar(ax)
-    plt.show()
 
     X = all_train_set.iloc[:, :-1]
     Y = all_train_set.iloc[:, -1]
 
     Y = Y.apply(lambda x: to_log_label(x))
     penalty_type_array = pd.Categorical(data["penalty"]).codes
-    get_scatter(X, Y, penalty_type_array)
 
     Y = np.array(np.ravel(Y))
     regressor = MLPRegressor(hidden_layer_sizes=(84, 42, 21), alpha=0.005, learning_rate='adaptive',
